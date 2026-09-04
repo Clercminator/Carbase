@@ -13,7 +13,7 @@ const outcomes = [
 export default function DealCheckPage() {
   return (
     <div className="deal-check-page">
-      <SiteHeader theme="light" />
+      <SiteHeader />
       <main>
         <section className="deal-check-hero">
           <div className="deal-check-container">
