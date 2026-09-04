@@ -47,7 +47,7 @@ export default function SearchExperience() {
   return (
     <section className="search-section" id="search">
       <div className="content-container">
-        <h2 className="quick-heading">¿Qué harás hoy?</h2>
+        <h2 className="quick-heading">¿Qué quieres hacer?</h2>
         <div className="quick-actions" role="list" aria-label="Acciones rápidas">
           {quickActions.map(({ label, Icon }, index) => (
             <button
