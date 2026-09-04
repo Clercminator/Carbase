@@ -42,10 +42,10 @@ export const scoreRows = [
 ]
 
 export const comparables = [
-  { version: 'Configuración A', year: '—', mileage: 'Bajo', region: 'Zona central', price: '$17.680.000', days: '18 días' },
-  { version: 'Configuración B', year: '—', mileage: 'Medio', region: 'Zona central', price: '$17.950.000', days: '24 días' },
-  { version: 'Configuración C', year: '—', mileage: 'Medio', region: 'Otra región', price: '$18.100.000', days: '31 días' },
-  { version: 'Configuración D', year: '—', mileage: 'Alto', region: 'Zona central', price: '$17.490.000', days: '37 días' },
+  { version: 'Configuración A', mileage: 'Rango bajo', region: 'Zona central', price: '$17.680.000', updated: 'Hace 2 h', similarity: 94, included: true },
+  { version: 'Configuración B', mileage: 'Rango medio', region: 'Zona central', price: '$17.950.000', updated: 'Hace 5 h', similarity: 91, included: true },
+  { version: 'Configuración C', mileage: 'Rango medio', region: 'Otra región', price: '$18.100.000', updated: 'Ayer', similarity: 84, included: true },
+  { version: 'Configuración D', mileage: 'Rango alto', region: 'Zona central', price: '$17.490.000', updated: 'Hace 2 días', similarity: 76, included: false },
 ]
 
 export const resultDefaults = {

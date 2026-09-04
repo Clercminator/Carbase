@@ -12,7 +12,7 @@ export default function DealScore() {
             </svg>
             <span className="gauge-number"><strong>61</strong><small>/100</small></span>
           </div>
-          <strong className="gauge-label">Deal Score</strong>
+          <strong className="gauge-label">Puntaje de compra</strong>
         </div>
 
         <div className="score-breakdown">

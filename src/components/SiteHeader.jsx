@@ -3,11 +3,11 @@ import { Globe2, Menu, Search, UserRound, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
 const navItems = [
-  { label: 'Productos', href: '/#search' },
-  { label: 'Mercado', href: '/analysis' },
-  { label: 'Datos', href: '/analysis#summary' },
-  { label: 'Distribuidores', href: '/#search' },
-  { label: 'Más', href: '/analysis#comparables' },
+  { label: 'Análisis gratuito', href: '/deal-check' },
+  { label: 'Mercado', href: '/terminal/mercado' },
+  { label: 'Datos', href: '/methodology' },
+  { label: 'Distribuidores', href: '/terminal' },
+  { label: 'Metodología', href: '/methodology' },
 ]
 
 export default function SiteHeader({ theme = 'dark' }) {
@@ -57,8 +57,8 @@ export default function SiteHeader({ theme = 'dark' }) {
 
         <div className="header-actions">
           <button className="language-button" type="button" aria-label="Idioma: español"><Globe2 /><span>ES</span></button>
-          <button className="account-button" type="button" aria-label="Abrir cuenta"><UserRound /></button>
-          <Link className="gradient-button" to="/#search">Comenzar gratis</Link>
+          <Link className="account-button" to="/terminal" aria-label="Abrir terminal profesional"><UserRound /></Link>
+          <Link className="gradient-button" to="/deal-check">Analizar gratis</Link>
           <button
             className="menu-button"
             type="button"

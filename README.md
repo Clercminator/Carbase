@@ -1,6 +1,6 @@
 # AUTOINDEX
 
-Frontend for an independent automotive market-intelligence platform for Chile. The current implementation includes the acquisition landing page, vehicle-market search workflow, and a responsive analysis report.
+Frontend for an independent automotive market-intelligence platform for Chile. The current implementation connects a public Deal Check, an explainable analysis report, and a professional terminal demonstration.
 
 ## Local development
 
@@ -26,10 +26,16 @@ Import the GitHub repository into Vercel. The project uses the Vite defaults:
 - Output directory: `dist`
 - Install command: `npm install`
 
-`vercel.json` includes the SPA rewrite required for `/analysis` and future client-side routes.
+`vercel.json` includes the SPA rewrite required for client-side routes.
 
 ## Current scope
 
-- `/`: landing page, product-video slot, quick actions, and market search.
-- `/analysis`: sample analysis report populated from the search selections.
-- Data shown in the analysis is demonstrative and should be replaced by backend/API results when the data service is available.
+- `/`: landing page, product-video slot, quick actions, and the three-method analysis intake.
+- `/deal-check`: public analysis flow using a publication link, license plate, or vehicle filters.
+- `/analysis/demo-evaluacion`: explainable sample report with comparable selection, adjustments, confidence and disclosures.
+- `/terminal`: professional demo workspace for appraisals, inventory, market liquidity, monitoring and alerts.
+- `/methodology`: trust, methodology, data governance and limitations.
+
+All displayed market values are demonstrative and must be replaced by backend/API results. The planned integration boundary and longitudinal data entities are documented in [`docs/data-contract.md`](docs/data-contract.md).
+
+The professional terminal currently represents an authenticated state but does not implement production authentication. Organization isolation, roles and access control belong in the backend integration phase.
