@@ -10,7 +10,7 @@ const navItems = [
   { label: 'Metodología', href: '/methodology' },
 ]
 
-export default function SiteHeader({ theme = 'dark' }) {
+export default function SiteHeader({ theme = 'dark', ctaLabel = 'Analizar gratis', ctaHref = '/deal-check' }) {
   const [query, setQuery] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const navigate = useNavigate()
@@ -58,7 +58,7 @@ export default function SiteHeader({ theme = 'dark' }) {
         <div className="header-actions">
           <button className="language-button" type="button" aria-label="Idioma: español"><Globe2 /><span>ES</span></button>
           <Link className="account-button" to="/terminal" aria-label="Abrir terminal profesional"><UserRound /></Link>
-          <Link className="gradient-button" to="/deal-check">Analizar gratis</Link>
+          <Link className="gradient-button" to={ctaHref}>{ctaLabel}</Link>
           <button
             className="menu-button"
             type="button"

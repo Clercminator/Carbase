@@ -13,7 +13,7 @@ const outcomes = [
 export default function DealCheckPage() {
   return (
     <div className="deal-check-page">
-      <SiteHeader />
+      <SiteHeader ctaLabel="Terminal profesional" ctaHref="/terminal" />
       <main>
         <section className="deal-check-hero">
           <div className="deal-check-container">
