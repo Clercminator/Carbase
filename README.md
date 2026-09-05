@@ -30,12 +30,21 @@ Import the GitHub repository into Vercel. The project uses the Vite defaults:
 
 ## Current scope
 
-- `/`: landing page, product-video slot, quick actions, and the three-method analysis intake.
+- `/`: landing page with a subtle automotive background, product-video slot, quick actions, and the three-method analysis intake.
 - `/deal-check`: public analysis flow using a publication link, license plate, or vehicle filters.
 - `/analysis/demo-evaluacion`: explainable sample report with comparable selection, adjustments, confidence and disclosures.
-- `/terminal`: professional demo workspace for appraisals, inventory, market liquidity, monitoring and alerts.
+- `/terminal`: professional demo workspace with functional views for appraisals, inventory, market liquidity, monitoring, alerts and data governance.
 - `/methodology`: trust, methodology, data governance and limitations.
 
 All displayed market values are demonstrative and must be replaced by backend/API results. The planned integration boundary and longitudinal data entities are documented in [`docs/data-contract.md`](docs/data-contract.md).
 
 The professional terminal currently represents an authenticated state but does not implement production authentication. Organization isolation, roles and access control belong in the backend integration phase.
+
+## Frontend demo behavior
+
+- Terminal additions, outcomes, tracking rules and alerts persist locally in the browser using a versioned demo store.
+- CSV export produces downloadable files. The inventory importer reads a selected CSV and reports the detected row count without sending data anywhere.
+- Search, filters, drawers, modals, status controls and the responsive terminal navigation are interactive without a backend.
+- Clearing the browser's site data resets the local demonstration state.
+
+No local value should be treated as a production record. Authentication, server-side persistence, live scraping feeds and valuation-engine responses remain explicit integration points.
