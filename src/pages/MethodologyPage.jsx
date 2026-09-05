@@ -1,6 +1,7 @@
 import { AlertTriangle, ArrowLeft, Database, FileCheck2, LockKeyhole, Scale, UsersRound } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SiteHeader from '../components/SiteHeader.jsx'
+import PageMeta from '../components/PageMeta.jsx'
 
 const sections = [
   { Icon: Database, title: 'Fuentes y licencias', copy: 'Cada observación deberá conservar su fuente, fecha de captura, permiso de uso y reglas de retención. Priorizaremos acuerdos directos y fuentes autorizadas.' },
@@ -14,6 +15,7 @@ const sections = [
 export default function MethodologyPage() {
   return (
     <div className="methodology-page">
+      <PageMeta title="Metodología y confianza — AUTOINDEX" description="Fuentes, comparables, ajustes, confianza, cobertura y limitaciones de las estimaciones AUTOINDEX." />
       <SiteHeader theme="light" />
       <main className="methodology-main content-container">
         <Link className="back-link" to="/deal-check"><ArrowLeft aria-hidden="true" /> Volver al análisis gratuito</Link>
@@ -29,6 +31,7 @@ export default function MethodologyPage() {
           <div><span>Preparación regulatoria</span><h2>Ley 21.719</h2></div>
           <p>El diseño técnico considera desde ahora controles de privacidad y gobernanza orientados a la normativa chilena que entra en vigencia el 1 de diciembre de 2026. Esto no constituye asesoría legal.</p>
         </section>
+        <nav className="methodology-legal-links" aria-label="Información legal"><Link to="/privacy">Privacidad y tratamiento de datos</Link><Link to="/terms">Condiciones de la demostración</Link></nav>
       </main>
     </div>
   )

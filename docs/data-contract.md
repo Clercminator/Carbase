@@ -115,6 +115,15 @@ La patente o VIN debe almacenarse por separado con controles reforzados, cifrado
 - `coverage_summary`
 - `limitations`
 
+Estados mínimos esperados del análisis:
+
+- `queued` / `processing`: solicitud aceptada, todavía sin valores publicables.
+- `estimated`: resultado disponible con metodología, versión y limitaciones.
+- `insufficient_data`: no existe una muestra responsable; no se debe fabricar un rango.
+- `source_unavailable`: la publicación no pudo leerse o ya no está disponible.
+- `failed`: error recuperable del recolector o del motor.
+- `verified`: resultado complementado con identidad o inspección verificadas.
+
 ### `valuation_comparable`
 
 - `analysis_id`
@@ -144,9 +153,12 @@ El endpoint de análisis debería devolver en una sola respuesta el resultado, l
   "comparables": [],
   "coverage": {},
   "limitations": [],
-  "source_disclosures": []
+  "source_disclosures": [],
+  "next_actions": []
 }
 ```
+
+Los enlaces compartidos deben usar un identificador opaco con autorización de lectura y vencimiento. No deben incluir patente, VIN, correo, teléfono ni texto libre del usuario en la URL.
 
 ## Eventos de producto
 

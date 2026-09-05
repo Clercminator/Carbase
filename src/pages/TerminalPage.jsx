@@ -6,6 +6,7 @@ import {
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { TerminalContent } from '../components/terminal/TerminalViews.jsx'
 import { useDemoTerminalStore } from '../lib/demoTerminalStore.js'
+import PageMeta from '../components/PageMeta.jsx'
 
 const navigation = [
   { id: 'resumen', label: 'Resumen', Icon: Home },
@@ -63,13 +64,14 @@ export default function TerminalPage() {
 
   return (
     <div className="terminal-page">
+      <PageMeta title={`${navigation.find((item) => item.id === activeView)?.label || 'Terminal'} — AUTOINDEX`} description="Espacio profesional demostrativo para tasaciones, inventario, mercado, seguimientos y alertas." />
       <aside className={`terminal-sidebar${mobileOpen ? ' is-open' : ''}`}>
         <div className="terminal-brand"><Link to="/">AUTOINDEX</Link><button type="button" onClick={() => setMobileOpen(false)} aria-label="Cerrar navegación"><X /></button></div>
         <button className="terminal-org" type="button"><span>D</span><div><strong>Distribuidora demo</strong><small>Espacio profesional</small></div></button>
         <nav aria-label="Terminal profesional">
           {navigation.map(({ id, label, Icon }) => (
             <button className={activeView === id ? 'is-active' : ''} key={id} type="button" onClick={() => goTo(id)}>
-              <Icon aria-hidden="true" /><span>{label}</span>{id === 'alertas' ? <i aria-label="Alertas nuevas" /> : null}
+              <Icon aria-hidden="true" /><span>{label}</span>{id === 'alertas' ? <i aria-hidden="true" /> : null}
             </button>
           ))}
         </nav>

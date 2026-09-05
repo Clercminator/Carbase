@@ -1,5 +1,6 @@
 import { BarChart3, CircleDollarSign, ListChecks, ShieldCheck } from 'lucide-react'
 import DealCheckForm from '../components/DealCheckForm.jsx'
+import PageMeta from '../components/PageMeta.jsx'
 import SiteHeader from '../components/SiteHeader.jsx'
 import TrustBand from '../components/TrustBand.jsx'
 
@@ -13,6 +14,7 @@ const outcomes = [
 export default function DealCheckPage() {
   return (
     <div className="deal-check-page">
+      <PageMeta title="Análisis gratuito — AUTOINDEX" description="Analiza una publicación, patente o descripción de vehículo sin crear una cuenta." />
       <SiteHeader ctaLabel="Terminal profesional" ctaHref="/terminal" />
       <main>
         <section className="deal-check-hero">

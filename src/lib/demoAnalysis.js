@@ -1,17 +1,23 @@
+import { getAnalysisScenario, selectScenarioForInput } from '../data/analysisScenarios.js'
+
 const STORAGE_KEY = 'autoindex.demo-analysis.v1'
 
-export const DEMO_ANALYSIS_ID = 'demo-evaluacion'
-
 export function saveDemoAnalysis(input) {
+  const suffix = globalThis.crypto?.randomUUID?.().slice(0, 8) || Date.now().toString(36)
   const payload = {
-    schemaVersion: 1,
-    analysisId: DEMO_ANALYSIS_ID,
+    schemaVersion: 2,
+    analysisId: `demo-${suffix}`,
+    scenarioId: selectScenarioForInput(input),
     createdAt: new Date().toISOString(),
     input,
   }
 
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
   return payload
+}
+
+export function resolveDemoAnalysis(payload, override) {
+  return getAnalysisScenario(override || payload?.scenarioId || selectScenarioForInput(payload?.input))
 }
 
 export function loadDemoAnalysis() {

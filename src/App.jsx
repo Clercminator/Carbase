@@ -4,7 +4,10 @@ import AnalysisPage from './pages/AnalysisPage.jsx'
 import DealCheckPage from './pages/DealCheckPage.jsx'
 import LandingPage from './pages/LandingPage.jsx'
 import MethodologyPage from './pages/MethodologyPage.jsx'
+import NotFoundPage from './pages/NotFoundPage.jsx'
+import PrivacyPage from './pages/PrivacyPage.jsx'
 import TerminalPage from './pages/TerminalPage.jsx'
+import TermsPage from './pages/TermsPage.jsx'
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
@@ -30,7 +33,9 @@ export default function App() {
         <Route path="/analysis/:analysisId?" element={<AnalysisPage />} />
         <Route path="/terminal/:view?" element={<TerminalPage />} />
         <Route path="/methodology" element={<MethodologyPage />} />
-        <Route path="*" element={<LandingPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </>
   )

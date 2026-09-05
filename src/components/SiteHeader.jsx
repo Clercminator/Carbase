@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Globe2, Menu, Search, UserRound, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
+import { saveDemoAnalysis } from '../lib/demoAnalysis.js'
 
 const navItems = [
   { label: 'Análisis gratuito', href: '/deal-check' },
@@ -30,7 +31,10 @@ export default function SiteHeader({ theme = 'dark', ctaLabel = 'Analizar gratis
 
   const submitSearch = (event) => {
     event.preventDefault()
-    navigate('/analysis', { state: { vehicle: query.trim() || 'Vehículo seleccionado' } })
+    const value = query.trim()
+    if (!value) { searchRef.current?.focus(); return }
+    const analysis = saveDemoAnalysis({ method: 'search', description: value })
+    navigate(`/analysis/${analysis.analysisId}`, { state: { vehicle: value, processing: true } })
     setMenuOpen(false)
   }
 

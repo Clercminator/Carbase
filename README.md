@@ -15,8 +15,11 @@ Open `http://localhost:5173`.
 
 ```powershell
 npm run verify
+npm run test:e2e
 npm run preview
 ```
+
+`npm run verify` runs ESLint, the Vitest scenario suite and the production build. Playwright covers the public analysis journey, consent and recovery states, conversion actions, terminal keyboard interactions, legal routes, responsive overflow and automated Axe checks on the primary public pages.
 
 ## Deploying to Vercel
 
@@ -35,6 +38,9 @@ Import the GitHub repository into Vercel. The project uses the Vite defaults:
 - `/analysis/demo-evaluacion`: explainable sample report with comparable selection, adjustments, confidence and disclosures.
 - `/terminal`: professional demo workspace with functional views for appraisals, inventory, market liquidity, monitoring, alerts and data governance.
 - `/methodology`: trust, methodology, data governance and limitations.
+- `/privacy`: demonstrative privacy and data-treatment behavior, clearly marked for legal review.
+- `/terms`: limitations and conditions of the current demonstration.
+- Unknown routes render an explicit recovery page instead of silently returning the homepage.
 
 All displayed market values are demonstrative and must be replaced by backend/API results. The planned integration boundary and longitudinal data entities are documented in [`docs/data-contract.md`](docs/data-contract.md).
 
@@ -48,3 +54,9 @@ The professional terminal currently represents an authenticated state but does n
 - Clearing the browser's site data resets the local demonstration state.
 
 No local value should be treated as a production record. Authentication, server-side persistence, live scraping feeds and valuation-engine responses remain explicit integration points.
+
+## Demonstrative analysis states
+
+The frontend can render high, medium and low confidence estimates as well as processing, insufficient-data, unavailable-publication and service-error states. These fixtures prevent the future API integration from treating every request as a successful valuation. Shared demo URLs contain only the scenario identifier and never place a patent or contact field in the URL.
+
+GitHub Actions runs verification and Chromium end-to-end checks on pushes to `main` and pull requests.

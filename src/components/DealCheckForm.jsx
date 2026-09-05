@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 import { ArrowRight, CarFront, ChevronDown, Link2, LockKeyhole, Search, SquareDashed } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { saveDemoAnalysis } from '../lib/demoAnalysis.js'
 
 const methods = [
@@ -18,6 +18,9 @@ export default function DealCheckForm({ compact = false, initialMethod = 'link',
   const [filters, setFilters] = useState(initialFilters)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [plateConsent, setPlateConsent] = useState(false)
+  const tabsRef = useRef([])
+  const instanceId = useId()
   const navigate = useNavigate()
 
   const normalizedPlate = useMemo(() => plate.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6), [plate])
@@ -41,6 +44,10 @@ export default function DealCheckForm({ compact = false, initialMethod = 'link',
       setError('Ingresa una patente válida para continuar.')
       return
     }
+    if (method === 'plate' && !plateConsent) {
+      setError('Confirma el tratamiento de la patente para continuar.')
+      return
+    }
     if (method === 'filters' && (!filters.brand || !filters.model || !filters.region)) {
       setError('Completa marca, modelo y región para continuar.')
       return
@@ -53,24 +60,44 @@ export default function DealCheckForm({ compact = false, initialMethod = 'link',
         : { method, ...filters }
 
     setSubmitting(true)
-    saveDemoAnalysis(input)
+    const analysis = saveDemoAnalysis(input)
     window.setTimeout(() => {
       setSubmitting(false)
-      if (onComplete) onComplete(input)
-      else navigate('/analysis/demo-evaluacion')
+      if (onComplete) onComplete(analysis)
+      else navigate(`/analysis/${analysis.analysisId}`, { state: { processing: true } })
     }, 550)
+  }
+
+  const handleTabKey = (event, index) => {
+    const last = methods.length - 1
+    let next = index
+    if (event.key === 'ArrowRight') next = index === last ? 0 : index + 1
+    else if (event.key === 'ArrowLeft') next = index === 0 ? last : index - 1
+    else if (event.key === 'Home') next = 0
+    else if (event.key === 'End') next = last
+    else return
+    event.preventDefault()
+    setMethod(methods[next].id)
+    setError('')
+    tabsRef.current[next]?.focus()
   }
 
   return (
     <form className={`deal-check-form${compact ? ' deal-check-form--compact' : ''}`} onSubmit={submit} noValidate>
       <div className="deal-methods" role="tablist" aria-label="Forma de ingresar el vehículo">
-        {methods.map(({ id, label, Icon }) => (
+        {methods.map(({ id, label, Icon }, index) => (
           <button
             className={method === id ? 'is-active' : ''}
             key={id}
             type="button"
             role="tab"
+            aria-label={label}
             aria-selected={method === id}
+            aria-controls={`${instanceId}-panel-${id}`}
+            id={`${instanceId}-tab-${id}`}
+            tabIndex={method === id ? 0 : -1}
+            ref={(node) => { tabsRef.current[index] = node }}
+            onKeyDown={(event) => handleTabKey(event, index)}
             onClick={() => { setMethod(id); setError('') }}
           >
             <Icon aria-hidden="true" /><span>{label}</span>
@@ -78,12 +105,12 @@ export default function DealCheckForm({ compact = false, initialMethod = 'link',
         ))}
       </div>
 
-      <div className="deal-form-body">
+      <div className="deal-form-body" role="tabpanel" id={`${instanceId}-panel-${method}`} aria-labelledby={`${instanceId}-tab-${method}`}>
         {method === 'link' ? (
           <label className="deal-primary-input">
             <span className="sr-only">Enlace de la publicación</span>
             <Link2 aria-hidden="true" />
-            <input value={link} onChange={(event) => setLink(event.target.value)} placeholder="Pega el enlace de la publicación" inputMode="url" autoComplete="url" />
+            <input value={link} onChange={(event) => setLink(event.target.value)} placeholder="Pega el enlace de la publicación" inputMode="url" autoComplete="url" aria-invalid={Boolean(error)} aria-describedby={`${instanceId}-error`} />
           </label>
         ) : null}
 
@@ -91,7 +118,7 @@ export default function DealCheckForm({ compact = false, initialMethod = 'link',
           <label className="deal-primary-input plate-input">
             <span className="sr-only">Patente del vehículo</span>
             <SquareDashed aria-hidden="true" />
-            <input value={normalizedPlate} onChange={(event) => setPlate(event.target.value)} placeholder="Ingresa la patente" autoCapitalize="characters" autoComplete="off" />
+            <input value={normalizedPlate} onChange={(event) => setPlate(event.target.value)} placeholder="Ingresa la patente" autoCapitalize="characters" autoComplete="off" aria-invalid={Boolean(error)} aria-describedby={`${instanceId}-plate-note ${instanceId}-error`} />
           </label>
         ) : null}
 
@@ -111,9 +138,9 @@ export default function DealCheckForm({ compact = false, initialMethod = 'link',
         <button className="deal-submit" type="submit" disabled={submitting}>
           {submitting ? <><Search className="spin" aria-hidden="true" /> Preparando análisis…</> : <>Analizar gratis <ArrowRight aria-hidden="true" /></>}
         </button>
-        <p className="deal-privacy"><LockKeyhole aria-hidden="true" /> No necesitas crear una cuenta</p>
-        <p className={`deal-error${error ? ' is-visible' : ''}`} role="alert">{error || ' '}</p>
-        {method === 'plate' ? <p className="deal-data-note">La patente se usa solo para identificar el vehículo y preparar el análisis. Revisa nuestro tratamiento de datos antes de continuar.</p> : null}
+        <p className="deal-privacy"><LockKeyhole aria-hidden="true" /> No necesitas crear una cuenta · <Link to="/privacy">Cómo cuidamos tus datos</Link></p>
+        <p id={`${instanceId}-error`} className={`deal-error${error ? ' is-visible' : ''}`} role="alert">{error || ' '}</p>
+        {method === 'plate' ? <div className="plate-consent" id={`${instanceId}-plate-note`}><label><input type="checkbox" checked={plateConsent} onChange={(event) => setPlateConsent(event.target.checked)} /> <span>Autorizo el uso temporal de la patente para identificar el vehículo y generar este análisis.</span></label><Link to="/privacy#patentes">Finalidad y retención</Link></div> : null}
       </div>
     </form>
   )
