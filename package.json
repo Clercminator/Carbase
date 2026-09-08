@@ -12,7 +12,8 @@
     "test:e2e": "playwright test",
     "verify": "npm run lint && npm run test && npm run build",
     "commerce:setup": "node scripts/setup-commerce.js",
-    "commerce:check": "node scripts/check-commerce.js"
+    "commerce:check": "node scripts/check-commerce.js",
+    "commerce:scheduler": "node scripts/setup-commerce-scheduler.js"
   },
   "dependencies": {
     "@mercadopago/sdk-react": "^1.0.7",

@@ -56,6 +56,19 @@ The command uploads a private PDF (max 8 MB), registers a report available for p
 
 ## Deployment and notifications
 
+Scheduler update: Supabase Cron is now installed as `carbase-commerce-recovery`, running every five minutes. It calls the existing Vercel worker when submitted or approved orders exist; empty queues skip the HTTP call. The URL and bearer credential are stored in Supabase Vault. No Edge Function or Vercel Cron is required. Free-project pauses still stop scheduling.
+
+- Install or refresh the job and Vault values: `npm run commerce:scheduler`.
+- Inspect cron runs and HTTP results: `npm run commerce:scheduler -- check`.
+- Exercise the real worker immediately: `npm run commerce:scheduler -- probe`. This processes existing work and can deliver queued emails.
+- Pause this job: `npm run commerce:scheduler -- pause`.
+
+Re-run installation after changing `APP_URL` or `CRON_SECRET`, matching the deployed worker. Installation replaces the named job without duplicating it. The private dispatcher is unavailable to browser roles. Request and cron metadata for this job are pruned after seven days; pg_net HTTP responses have shorter retention. Cron success means a request was queued: also inspect HTTP status and the worker's `failed` count.
+
+The initial live network probe returned HTTP 200 with zero reconciliations, emails or failures against an empty database. No charge was made. The user reports the production webhook URL is configured. Event selection, rotated-secret confirmation and provider test transactions remain launch checks. Monthly billing remains unimplemented.
+
+No hosting plan was upgraded. Vercel Hobby's non-commercial-use restriction still applies independently of payment enablement. Supabase Free retains its pause, storage and backup limitations.
+
 Deploy the Node functions as well as the Vite assets. Copy the needed environment values to Vercel; local `.env` is not uploaded automatically. Use an isolated test project/configuration for provider test purchases. The API routes are kept ahead of the SPA fallback.
 
 Set Mercado Pago's production webhook URL to:
@@ -64,7 +77,7 @@ Set Mercado Pago's production webhook URL to:
 
 Only configure it after this endpoint is deployed. Enable payment events (`payment`, shown as Pagos/legacy in the supplied screen) for this implementation. It uses `/v1/payments`, not the Orders API. Unhandled notification types are rejected; subscription, shipping, delivery and other event topics should not be enabled until handlers exist. See [provider webhook documentation](https://www.mercadopago.cl/developers/es/docs/your-integrations/notifications/webhooks).
 
-A valid payment webhook persists the result before attempting email. Failed email attempts request a retry. Also configure a scheduler every few minutes to GET `/api/commerce?action=jobs` with `Authorization: Bearer <CRON_SECRET>`. No scheduler is installed automatically; use a scheduler supported by the deployment plan. The worker handles small batches to fit serverless time limits. It reconciles submitted and approved payments in round-robin order using a last-checked timestamp and attempts up to two outstanding PDF deliveries per run. Monitor backlog and scale the worker before higher volume.
+A valid payment webhook persists the result before attempting email. Failed email attempts request a retry. The installed scheduler sends GET requests to `/api/commerce?action=jobs` with `Authorization: Bearer <CRON_SECRET>`. The explicit installation command and monitoring instructions are above. The worker handles small batches to fit serverless time limits. It reconciles submitted and approved payments in round-robin order using a last-checked timestamp and attempts up to two outstanding PDF deliveries per run. Monitor backlog and scale the worker before higher volume.
 
 SMTP does not offer exactly-once delivery. A process crash after SMTP acceptance but before recording success can cause a duplicate email. Database payment/credit operations remain idempotent. A delivery lease avoids normal concurrent sends; crashed leases expire after ten minutes. The stable Message-ID helps investigate duplicates but is not a guaranteed deduplication mechanism. Monitor bounces in the sender mailbox; bounce webhooks are not implemented.
 

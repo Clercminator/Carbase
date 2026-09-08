@@ -21,6 +21,10 @@ async function run(action,{user=null,token,body={},orders=order,headers={},metho
 }
 afterEach(()=>vi.unstubAllGlobals())
 describe('commerce HTTP authorization',()=>{
+ it('rejects unauthenticated recovery jobs before accessing orders',async()=>{
+  const {res,db}=await run('jobs')
+  expect(res.code).toBe(401);expect(db.from).not.toHaveBeenCalled()
+ })
  it('keeps payment creation disabled before fulfillment is configured',async()=>{const {res,db}=await run('create',{method:'POST'});expect(res.code).toBe(503);expect(db.from).not.toHaveBeenCalled()})
  it('requires verified identity for purchase history',async()=>{const {res}=await run('history');expect(res.code).toBe(401)})
  it('does not expose orders by guessing UUIDs',async()=>{const {res}=await run('order');expect(res.code).toBe(404);expect(JSON.stringify(res.data)).not.toContain(order.email)})
