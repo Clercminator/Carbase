@@ -18,10 +18,10 @@ export function ownsOrder(order, user, token, secret) {
  return Boolean(secret && !order.user_id && Date.now() - Date.parse(order.created_at) < 90*86400000 && equal(token, guestToken(order, secret)))
 }
 export function verifyWebhook({ id, requestId, signature }, secret) {
- if (!secret || !/^\d+$/.test(id || '') || !requestId || typeof signature !== 'string') return false
+ if (!secret || !/^[a-zA-Z0-9_-]{1,128}$/.test(id || '') || !requestId || typeof signature !== 'string') return false
  const fields = Object.fromEntries(signature.split(',').map(s => s.trim().split('=')))
  if (!/^\d+$/.test(fields.ts || '') || !/^[a-f0-9]{64}$/i.test(fields.v1 || '')) return false
- const expected = createHmac('sha256', secret).update(`id:${id};request-id:${requestId};ts:${fields.ts};`).digest('hex')
+ const expected = createHmac('sha256', secret).update(`id:${id.toLowerCase()};request-id:${requestId};ts:${fields.ts};`).digest('hex')
  return equal(expected, fields.v1.toLowerCase())
 }
 export function validatePayment(payment, order, merchantId) {

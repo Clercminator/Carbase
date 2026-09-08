@@ -36,7 +36,7 @@ describe('commerce HTTP authorization',()=>{
  })
  it('rejects forged notifications without contacting Mercado Pago',async()=>{const fetch=vi.fn();vi.stubGlobal('fetch',fetch);const {res}=await run('webhook',{method:'POST'});expect(res.code).toBe(401);expect(fetch).not.toHaveBeenCalled()})
  it('rejects browser cross-origin writes',async()=>{const {res}=await run('claim',{method:'POST',headers:{origin:'https://evil.test'}});expect(res.code).toBe(403)})
- it('does not expose configuration secrets',async()=>{const {res}=await run('config');expect(res.data).toEqual({enabled:false,publicKey:null})})
+ it('does not expose configuration secrets',async()=>{const {res}=await run('config');expect(res.data).toEqual({enabled:false,subscriptionsEnabled:false,publicKey:null})})
 })
 
 describe('payment submission',()=>{

@@ -29,3 +29,22 @@ begin
 end;
 $$;
 revoke all on function commerce_private.dispatch_recovery(boolean) from public, anon, authenticated;
+
+create or replace function commerce_private.dispatch_subscription_recovery(force_probe boolean default false)
+returns bigint language plpgsql security invoker set search_path='' as $$
+declare request bigint;
+begin
+ delete from cron.job_run_details where jobid in (
+  select jobid from cron.job where jobname='carbase-subscription-recovery'
+ ) and start_time<now()-interval '7 days';
+ if not force_probe and not exists(select 1 from public.commerce_subscriptions) then return null; end if;
+ select net.http_get(
+  url:=replace((select decrypted_secret from vault.decrypted_secrets where name='carbase_jobs_url'),'action=jobs','action=subscriptionJobs'),
+  headers:=jsonb_build_object('Authorization','Bearer '||(select decrypted_secret from vault.decrypted_secrets where name='carbase_jobs_secret')),
+  timeout_milliseconds:=65000
+ ) into request;
+ insert into commerce_private.recovery_requests(request_id) values(request);
+ return request;
+end;
+$$;
+revoke all on function commerce_private.dispatch_subscription_recovery(boolean) from public,anon,authenticated;

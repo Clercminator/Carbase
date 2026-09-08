@@ -21,16 +21,19 @@ try {
   }
   await client.query(readFileSync(new URL('../supabase/commerce-scheduler.sql', import.meta.url), 'utf8'))
   await client.query("select cron.schedule('carbase-commerce-recovery','*/5 * * * *','select commerce_private.dispatch_recovery()')")
+  await client.query("select cron.schedule('carbase-subscription-recovery','2-59/5 * * * *','select commerce_private.dispatch_subscription_recovery()')")
+  await client.query("select cron.alter_job(jobid, active := true) from cron.job where jobname='carbase-subscription-recovery'")
   await client.query("select cron.alter_job(jobid, active := true) from cron.job where jobname='carbase-commerce-recovery'")
   await client.query('commit')
  }
- if (mode === 'pause') await client.query("select cron.alter_job(jobid, active := false) from cron.job where jobname='carbase-commerce-recovery'")
+ if (mode === 'pause') await client.query("select cron.alter_job(jobid, active := false) from cron.job where jobname in ('carbase-commerce-recovery','carbase-subscription-recovery')")
  if (mode === 'probe') {
   // Exercises the exact network path without creating an order or payment.
   const result = await client.query('select commerce_private.dispatch_recovery(true) as request_id')
   console.log(result.rows[0])
+  console.log((await client.query('select commerce_private.dispatch_subscription_recovery(true) as subscription_request_id')).rows[0])
  }
- console.log(JSON.stringify({ jobs: (await client.query("select jobid,schedule,active from cron.job where jobname='carbase-commerce-recovery'")).rows, runs: (await client.query("select status,start_time,end_time from cron.job_run_details where jobid in (select jobid from cron.job where jobname='carbase-commerce-recovery') order by start_time desc limit 3")).rows, responses: (await client.query('select r.id,r.status_code,r.timed_out,r.created, case when r.status_code=200 then r.content::jsonb else null end as result from net._http_response r join commerce_private.recovery_requests q on q.request_id=r.id order by r.created desc limit 3')).rows }))
+ console.log(JSON.stringify({ jobs: (await client.query("select jobid,jobname,schedule,active from cron.job where jobname in ('carbase-commerce-recovery','carbase-subscription-recovery')")).rows, runs: (await client.query("select jobid,status,start_time,end_time from cron.job_run_details where jobid in (select jobid from cron.job where jobname in ('carbase-commerce-recovery','carbase-subscription-recovery')) order by start_time desc limit 3")).rows, responses: (await client.query('select r.id,r.status_code,r.timed_out,r.created, case when r.status_code=200 then r.content::jsonb else null end as result from net._http_response r join commerce_private.recovery_requests q on q.request_id=r.id order by r.created desc limit 3')).rows }))
 } catch (error) {
  await client.query('rollback').catch(() => {})
  console.error(`Scheduler operation failed (${error.code || 'CONFIGURATION_ERROR'}). Credentials were not printed.`)

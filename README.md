@@ -2,11 +2,11 @@
 
 Carbase is an automotive market-intelligence product for Chile, built to help people evaluate a purchase or sale and help professionals manage recurring vehicle decisions. Its interface connects a simple public analysis flow with a more detailed professional workspace.
 
-The current application combines an interactive market-data demonstration with Supabase authentication. Market figures, valuations, monitoring events and confidence scores are illustrative. Live market analysis, recurring billing and organization-wide records are not implemented. One-time commerce is implemented locally behind a launch gate, with remote setup and provider validation pending. This document describes the product, its construction and the reasons behind its design.
+The current application combines an interactive market-data demonstration with Supabase authentication. Market figures, valuations, monitoring events and confidence scores are illustrative. Live market analysis and organization-wide records are not implemented. Reports, packs and the Profesional subscription have gated commerce implementations; remote schemas are installed, while provider acceptance and real-report delivery remain launch checks. This document describes the product, its construction and the reasons behind its design.
 
 ## Users, payment and access
 
-The commercial model is a proposal, reflected in the frontend catalog in `src/data/pricingPlans.js`. All proposed prices are CLP including IVA. A gated first implementation now provides guest card checkout, server-side purchase records and pack credits; production payments remain disabled pending real report delivery and provider acceptance tests. Monthly subscriptions remain planned.
+The commercial model is a proposal, reflected in the frontend catalog in `src/data/pricingPlans.js`. All proposed prices are CLP including IVA. A gated first implementation now provides guest card checkout, server-side purchase records and pack credits; production payments remain disabled pending real report delivery and provider acceptance tests. Profesional includes a monthly subscription implementation; Automotora remains planned.
 
 | Expected user | Intended offer | What they would see and use | Why this level of access fits |
 | --- | --- | --- | --- |
@@ -59,14 +59,14 @@ The privacy page describes actual account processing, browser storage, plate aut
 
 The current scope still excludes live data acquisition and valuation, server-side record persistence, organization permissions, payment reconciliation, enforceable allowances, paid report delivery and inspection-provider submission. The interface demonstrates these product directions where applicable; it does not establish that those services are operational.
 
-Mercado Pago production credentials are configured locally. Vite maps only `MERCADOPAGO_PUBLIC_KEY` to the browser; `MERCADOPAGO_ACCESS_TOKEN` and `MERCADOPAGO_CLIENT_SECRET` remain private. A read-only account check returned HTTP 200 for Chile on September 7, 2026. Payment processing, subscription lifecycle, webhook verification and the server-side credit ledger are still pending; this configuration does not enable charges. Set a separate `MERCADOPAGO_WEBHOOK_SECRET` when configuring notifications. Local `.env` values are not automatically deployed to Vercel.
+Mercado Pago production credentials are configured locally. Vite maps only `MERCADOPAGO_PUBLIC_KEY` to the browser; `MERCADOPAGO_ACCESS_TOKEN` and `MERCADOPAGO_CLIENT_SECRET` remain private. A read-only account check returned HTTP 200 for Chile on September 7, 2026. Payment processing, the Profesional subscription lifecycle, webhook verification and the server-side credit ledger are implemented behind explicit launch gates; credentials alone do not enable charges. Set a separate `MERCADOPAGO_WEBHOOK_SECRET` when configuring notifications. Local `.env` values are not automatically deployed to Vercel.
 
 
 ## Commerce implementation and setup
 
 Guest checkout is `/checkout?plan=report&report=<prepared-report-id>` (or `plan=pack`). `/purchase/:id` provides payment status, private downloads and pack redemption. `/account` shows purchase history, prices paid, PDFs and verified-email claiming of earlier guest purchases. Guest purchases do not require an account; claimed purchases require their owner's session.
 
-Vercel Node functions and the Vite local middleware share `server/commerce.js`. The backend verifies Mercado Pago notifications, checks the merchant/currency/amount/order, records payment state and grants credits idempotently. Google Workspace SMTP delivers real PDF attachments from `davidclerc@imrtech.xyz`. Payment and delivery states are separate. Monthly billing, real valuation/PDF generation and fiscal documents remain outside this phase.
+Vercel Node functions and the Vite local middleware share `server/commerce.js`. The backend verifies Mercado Pago notifications, checks the merchant/currency/amount/order, records payment state and grants credits idempotently. Google Workspace SMTP delivers real PDF attachments from `davidclerc@imrtech.xyz`. Payment and delivery states are separate. Profesional uses card authorization through Mercado Pago Subscriptions, monthly payment records and 30 non-rollover credits per paid period. Cancellation stops renewal and preserves the paid period. Real valuation/PDF generation, Automotora organizations and fiscal documents remain outside this phase.
 
 `COMMERCE_ENABLED=false` keeps charges disabled until database setup, actual prepared reports, SMTP authentication, deployed configuration and provider tests are complete. Only the Mercado Pago public key belongs in the frontend. Server secrets must never use a `VITE_` prefix. Local `.env` is not uploaded to Vercel.
 

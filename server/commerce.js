@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer'
 import { createClient } from '@supabase/supabase-js'
 import process from 'node:process'
 import { catalog, fail, guestToken, ownsOrder, readiness, uuid, validatePayment, verifyWebhook, equal } from './commerce-core.js'
+import { subscriptionsEnabled, subscriptionAction, syncSubscription, syncInvoice, subscriptionApi, subscriptionPayment, runSubscriptionJobs } from './subscriptions.js'
 
 const safeOrder = o => ({ id:o.id, planId:o.plan_id, amount:o.amount, status:o.status, createdAt:o.created_at, expiresAt:o.expires_at, credits:o.credits })
 const check = result => { if (result.error) fail(503, 'No pudimos acceder a tus compras. Intenta nuevamente.'); return result.data }
@@ -42,14 +43,17 @@ async function pdfFor(db, report) {
  return bytes
 }
 async function reconcile(db, env, payment) {
- const order = await orderFor(db, payment.external_reference)
+ let order
+ try { order = await orderFor(db,payment.external_reference) }
+ catch(error) { if(error.status!==404) throw error; return subscriptionPayment(db,env,payment) }
+ if(order.subscription_id) return subscriptionPayment(db,env,payment)
  const status = validatePayment(payment,order,env.MERCADOPAGO_COLLECTOR_ID)
  check(await db.rpc('commerce_apply_payment',{ p_order:order.id,p_payment:String(payment.id),p_status:status,p_updated:payment.date_last_updated }))
  return order.id
 }
 async function details(db, order) {
  const uses = check(await db.from('commerce_redemptions').select('report_id,email_sent_at,commerce_reports(title)').eq('order_id',order.id))
- return { ...safeOrder(order), creditsRemaining: order.status === 'approved' && Date.parse(order.expires_at)>Date.now() ? Math.max(0,order.credits-uses.length) : 0, reports: uses.map(r=>({ id:r.report_id,title:r.commerce_reports.title, deliveryStatus:r.email_sent_at?'sent':'pending' })) }
+ return { ...safeOrder(order), creditsRemaining: order.status === 'approved' && Date.parse(order.expires_at)>Date.now() && (!order.cycle_start || Date.parse(order.cycle_start)<=Date.now()) ? Math.max(0,order.credits-uses.length) : 0, reports: uses.map(r=>({ id:r.report_id,title:r.commerce_reports.title, deliveryStatus:r.email_sent_at?'sent':'pending' })) }
 }
 
 export function createHandler(env = process.env, suppliedDb) {
@@ -59,27 +63,38 @@ export function createHandler(env = process.env, suppliedDb) {
   try {
    const url = new URL(req.url,'https://local.invalid')
    const action = req.commerceAction || url.searchParams.get('action') || 'config'
-   const methods = { config:'GET', report:'GET', create:'POST', pay:'POST', order:'GET', history:'GET', claim:'POST', redeem:'POST', download:'GET', webhook:'POST', jobs:'GET' }
+   const methods = { config:'GET', report:'GET', create:'POST', pay:'POST', order:'GET', history:'GET', claim:'POST', redeem:'POST', download:'GET', webhook:'POST', jobs:'GET', subscriptions:'GET', subscribe:'POST', cancelSubscription:'POST', subscriptionJobs:'GET' }
    if (!(action in methods)) fail(404,'Ruta no encontrada.')
    if (req.method !== methods[action]) { res.setHeader('Allow',methods[action]); fail(405,'Método no permitido.') }
-   if (action === 'config') return res.status(200).json({ enabled:readiness(env), publicKey:readiness(env)?env.MERCADOPAGO_PUBLIC_KEY:null })
+   if (action === 'config') return res.status(200).json({ enabled:readiness(env), subscriptionsEnabled:subscriptionsEnabled(env), publicKey:readiness(env)?env.MERCADOPAGO_PUBLIC_KEY:null })
    if (req.method === 'POST' && action !== 'webhook' && req.headers.origin && req.headers.origin !== new URL(env.APP_URL || 'http://localhost:5173').origin) fail(403,'Origen no permitido.')
    const db = suppliedDb || createClient(env.SUPABASE_URL || `https://${env.SUPABASE_PROJECT_ID}.supabase.co`,env.SUPABASE_SECRET_KEY,{auth:{persistSession:false,autoRefreshToken:false}})
    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {}
    if (action === 'webhook') {
     const id = url.searchParams.get('data.id')
     if (!verifyWebhook({id,requestId:req.headers['x-request-id'],signature:req.headers['x-signature']},env.MERCADOPAGO_WEBHOOK_SECRET)) fail(401,'Notificación inválida.')
-    if (body.type !== 'payment' || String(body.data?.id) !== id) fail(400,'Evento no compatible.')
+    if (String(body.data?.id) !== id) fail(400,'Evento no compatible.')
+    if (body.type==='subscription_preapproval') {
+     await syncSubscription(db,env,await subscriptionApi(env,`/preapproval/${encodeURIComponent(id)}`))
+     return res.status(200).json({received:true})
+    }
+    if (body.type==='subscription_authorized_payment') {
+     await syncInvoice(db,env,await subscriptionApi(env,`/authorized_payments/${encodeURIComponent(id)}`))
+     return res.status(200).json({received:true})
+    }
+    if (body.type==='subscription_preapproval_plan') return res.status(200).json({received:true,ignored:true})
+    if (body.type !== 'payment' || !/^\d+$/.test(id)) fail(400,'Evento no compatible.')
     const orderId = await reconcile(db,env,await mp(env,`/v1/payments/${id}`))
-    const delivery = await runJobs(db,env,{orderId})
+    const delivery = orderId ? await runJobs(db,env,{orderId}) : {failed:0}
     if (delivery.failed) fail(503,'Entrega pendiente de reintento.')
     return res.status(200).json({received:true})
    }
-   if (action === 'jobs') {
+   if (action === 'jobs' || action === 'subscriptionJobs') {
     if (!env.CRON_SECRET || !equal(req.headers.authorization,`Bearer ${env.CRON_SECRET}`)) fail(401,'Acceso denegado.')
-    return res.status(200).json(await runJobs(db,env))
+    return res.status(200).json(await (action==='jobs'?runJobs(db,env):runSubscriptionJobs(db,env)))
    }
    const user = await getUser(req,db)
+   if (['subscriptions','subscribe','cancelSubscription'].includes(action)) return res.status(200).json(await subscriptionAction(action,{db,env,user,body}))
    if (action === 'history' || action === 'claim') {
     if (!user) fail(401,'Inicia sesión para ver tus compras.')
     if (action === 'claim') {
@@ -114,6 +129,7 @@ export function createHandler(env = process.env, suppliedDb) {
    if (!ownsOrder(order,user,req.headers['x-order-token'],env.ORDER_ACCESS_SECRET)) fail(404,'Compra no encontrada o enlace vencido. Inicia sesión si vinculaste la compra a tu cuenta.')
    if (action === 'order') return res.status(200).json({order:await details(db,order)})
    if (action === 'pay') {
+    if (order.plan_id==='pro') fail(409,'Las cuotas mensuales se procesan automáticamente.')
     if (!readiness(env)) fail(503,'Los pagos no están disponibles.')
     if (order.status !== 'pending' || Date.now()-Date.parse(order.created_at)>30*60000) fail(409,'La compra ya fue enviada o venció. Consulta su estado.')
     await pdfFor(db,await reportFor(db,order.initial_report_id))
@@ -121,7 +137,7 @@ export function createHandler(env = process.env, suppliedDb) {
     if (!f || typeof f.token !== 'string' || !/^[a-zA-Z0-9_-]{10,200}$/.test(f.token) || typeof f.payment_method_id !== 'string' || f.payment_method_id.length>50 || f.installments !== 1) fail(400,'Revisa los datos de pago. Selecciona una cuota.')
     const reserved = check(await db.from('commerce_orders').update({status:'submitted'}).eq('id',order.id).eq('status','pending').select('id'))
     if (!reserved.length) fail(409,'Ya estamos verificando este pago.')
-    const payment = await mp(env,'/v1/payments',{method:'POST',headers:{'X-Idempotency-Key':order.id},body:JSON.stringify({transaction_amount:order.amount,description:catalog[order.plan_id].name,token:f.token,installments:1,payment_method_id:f.payment_method_id,issuer_id:f.issuer_id,external_reference:order.id,notification_url:`${new URL(env.APP_URL).origin}/api/webhooks/mercadopago`,payer:{email:order.email,identification:f.payer?.identification}})})
+    const payment = await mp(env,'/v1/payments',{method:'POST',headers:{'X-Idempotency-Key':order.id},body:JSON.stringify({transaction_amount:order.amount,description:(order.plan_id==='pro'?'Profesional · cuota mensual':catalog[order.plan_id].name),token:f.token,installments:1,payment_method_id:f.payment_method_id,issuer_id:f.issuer_id,external_reference:order.id,notification_url:`${new URL(env.APP_URL).origin}/api/webhooks/mercadopago`,payer:{email:order.email,identification:f.payer?.identification}})})
     await reconcile(db,env,payment)
     return res.status(200).json({order:await details(db,await orderFor(db,order.id))})
    }
@@ -151,7 +167,7 @@ export function createHandler(env = process.env, suppliedDb) {
 
 export async function runJobs(db,env,{orderId} = {}) {
  let reconciled=0, sent=0, failed=0
- const pending = orderId ? [] : check(await db.from('commerce_orders').select('*').in('status',['submitted','approved']).order('payment_checked_at',{ascending:true,nullsFirst:true}).limit(1))
+ const pending = orderId ? [] : check(await db.from('commerce_orders').select('*').is('subscription_id',null).in('status',['submitted','approved']).order('payment_checked_at',{ascending:true,nullsFirst:true}).limit(1))
  for (const order of pending) {
   try {
    check(await db.from('commerce_orders').update({payment_checked_at:new Date().toISOString()}).eq('id',order.id))
@@ -177,7 +193,7 @@ export async function runJobs(db,env,{orderId} = {}) {
    const link=`${new URL(env.APP_URL).origin}/purchase/${order.id}#${guestToken(order,env.ORDER_ACCESS_SECRET)}`
    // A stable Message-ID helps tracing. SMTP has no exactly-once delivery guarantee.
    const transport=nodemailer.createTransport({host:'smtp.gmail.com',port:465,secure:true,auth:{user:env.SMTP_USER,pass:env.SMTP_PASS},connectionTimeout:10000,socketTimeout:15000,disableFileAccess:true,disableUrlAccess:true})
-   await transport.sendMail({from:{name:APP_NAME,address:env.EMAIL_FROM.match(/<([^>]+)>/)?.[1] || env.EMAIL_FROM},to:order.email,messageId:`<${order.id}.${report.id}@${env.SMTP_USER.split('@')[1]}>`,subject:"Tu informe " + APP_NAME,text:`Tu informe está adjunto. Compra: ${catalog[order.plan_id].name}. Total pagado: $${order.amount.toLocaleString('es-CL')} CLP, IVA incluido.\nGestiona tu compra y los créditos restantes: ${link}\nSi vinculaste la compra a una cuenta, inicia sesión para verla.`,attachments:[{filename:`informe-${APP_SLUG}.pdf`,content:Buffer.from(bytes),contentType:'application/pdf'}]})
+   await transport.sendMail({from:{name:APP_NAME,address:env.EMAIL_FROM.match(/<([^>]+)>/)?.[1] || env.EMAIL_FROM},to:order.email,messageId:`<${order.id}.${report.id}@${env.SMTP_USER.split('@')[1]}>`,subject:"Tu informe " + APP_NAME,text:`Tu informe está adjunto. Compra: ${(order.plan_id==='pro'?'Profesional · cuota mensual':catalog[order.plan_id].name)}. Total pagado: $${order.amount.toLocaleString('es-CL')} CLP, IVA incluido.\nGestiona tu compra y los créditos restantes: ${link}\nSi vinculaste la compra a una cuenta, inicia sesión para verla.`,attachments:[{filename:`informe-${APP_SLUG}.pdf`,content:Buffer.from(bytes),contentType:'application/pdf'}]})
    check(await db.from('commerce_redemptions').update({email_sent_at:new Date().toISOString()}).eq('order_id',job.order_id).eq('report_id',job.report_id))
    sent++
   } catch {

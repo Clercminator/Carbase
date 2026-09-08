@@ -20,9 +20,9 @@ export function PurchaseCard({order,token='',onChange}) {
  }
  async function redeem(e) {
   e.preventDefault();setBusy(true);setError('')
-  try{await commerce('redeem',{method:'POST',token,body:{orderId:order.id,reportId:new URL(reportId,window.location.origin).pathname.split('/').filter(Boolean).at(-1)}});setReportId('');await onChange()}catch(e){setError(e.message)}finally{setBusy(false)}
+  try{await commerce('redeem',{method:'POST',token,body:{orderId:order.id,reportId:new URL(reportId,window.location.origin).searchParams.get('report') || new URL(reportId,window.location.origin).pathname.split('/').filter(Boolean).at(-1)}});setReportId('');await onChange()}catch(e){setError(e.message)}finally{setBusy(false)}
  }
- return <article className="commerce-panel"><h2>{order.planId==='pack'?'Compara 3':'Informe individual'}</h2><p>{new Date(order.createdAt).toLocaleDateString('es-CL')} · {formatPlanPrice(order.amount)} CLP · IVA incluido</p><strong>{labels[order.status]||'Verificando estado'}</strong><p className="commerce-reference">Compra {order.id}</p>
+ return <article className="commerce-panel"><h2>{order.planId==='pro'?'Profesional · cuota mensual':order.planId==='pack'?'Compara 3':'Informe individual'}</h2><p>{new Date(order.createdAt).toLocaleDateString('es-CL')} · {formatPlanPrice(order.amount)} CLP · IVA incluido</p><strong>{labels[order.status]||'Verificando estado'}</strong><p className="commerce-reference">Compra {order.id}</p>
  {order.status==='submitted'?<p>Estamos confirmando el pago. No vuelvas a pagar mientras verificamos esta compra.</p>:null}
  {order.status==='approved'?<><p>Créditos disponibles: <strong>{order.creditsRemaining}</strong>{order.expiresAt?` · Vencen el ${new Date(order.expiresAt).toLocaleDateString('es-CL')}`:''}</p>
  <ul className="commerce-reports">{order.reports.map(report=><li key={report.id}><div><strong>{report.title}</strong><p>{report.deliveryStatus==='sent'?'Correo enviado al servicio de entrega':'Entrega por correo pendiente; puedes descargarlo aquí.'}</p></div><button disabled={busy} onClick={()=>download(report)}>Descargar PDF</button></li>)}</ul>

@@ -65,7 +65,7 @@ Scheduler update: Supabase Cron is now installed as `carbase-commerce-recovery`,
 
 Re-run installation after changing `APP_URL` or `CRON_SECRET`, matching the deployed worker. Installation replaces the named job without duplicating it. The private dispatcher is unavailable to browser roles. Request and cron metadata for this job are pruned after seven days; pg_net HTTP responses have shorter retention. Cron success means a request was queued: also inspect HTTP status and the worker's `failed` count.
 
-The initial live network probe returned HTTP 200 with zero reconciliations, emails or failures against an empty database. No charge was made. The user reports the production webhook URL is configured. Event selection, rotated-secret confirmation and provider test transactions remain launch checks. Monthly billing remains unimplemented.
+The initial live network probe returned HTTP 200 with zero reconciliations, emails or failures against an empty database. No charge was made. The user reports the production webhook URL is configured. Event selection, rotated-secret confirmation and provider test transactions remain launch checks. Profesional monthly billing is implemented behind a separate launch gate; see the subscription operations below.
 
 No hosting plan was upgraded. Vercel Hobby's non-commercial-use restriction still applies independently of payment enablement. Supabase Free retains its pause, storage and backup limitations.
 
@@ -75,7 +75,7 @@ Set Mercado Pago's production webhook URL to:
 
 `https://carbase-ten.vercel.app/api/webhooks/mercadopago`
 
-Only configure it after this endpoint is deployed. Enable payment events (`payment`, shown as Pagos/legacy in the supplied screen) for this implementation. It uses `/v1/payments`, not the Orders API. Unhandled notification types are rejected; subscription, shipping, delivery and other event topics should not be enabled until handlers exist. See [provider webhook documentation](https://www.mercadopago.cl/developers/es/docs/your-integrations/notifications/webhooks).
+Only configure it after this endpoint is deployed. Enable payment events (`payment`, shown as Pagos/legacy in the supplied screen) for this implementation. It uses `/v1/payments`, not the Orders API. Enable Planes y suscripciones as well after deploying the Profesional handlers. They process subscription_preapproval and subscription_authorized_payment. Shared plan-template notifications are acknowledged without granting credits; this integration uses subscriptions without shared provider plans. Leave shipping, delivery and other unrelated topics disabled. See [provider webhook documentation](https://www.mercadopago.cl/developers/es/docs/your-integrations/notifications/webhooks).
 
 A valid payment webhook persists the result before attempting email. Failed email attempts request a retry. The installed scheduler sends GET requests to `/api/commerce?action=jobs` with `Authorization: Bearer <CRON_SECRET>`. The explicit installation command and monitoring instructions are above. The worker handles small batches to fit serverless time limits. It reconciles submitted and approved payments in round-robin order using a last-checked timestamp and attempts up to two outstanding PDF deliveries per run. Monitor backlog and scale the worker before higher volume.
 
@@ -91,7 +91,7 @@ If payment creation times out before returning its ID, the job searches by the o
 - Verify actual PDF contents/layout and successful delivery to a controlled mailbox before public sales. No production payments or emails have been sent in this work.
 - Complete commercial/refund/privacy terms and fiscal receipt/invoice handling. The email describes the purchase; it is not an automatically issued Chilean tax document.
 - Publish a real report entry flow after the trusted live-data pipeline exists. The public pricing page still clearly labels plans upcoming; a checkout URL alone is not a launched product.
-- Monthly subscriptions, automatic valuation/PDF generation, wallet checkout, fiscal documents and bounce processing are outside this first release.
+- Automotora organizations, automatic valuation/PDF generation, wallet checkout, fiscal documents and bounce processing are outside this release.
 
 ## Test evidence
 
@@ -100,3 +100,24 @@ The unit/API tests exercise signature tampering, guest isolation and expiry, cla
 The Session pooler URL is for migrations only. Runtime commerce uses Supabase HTTPS/PostgREST and Storage. See [Supabase connection guidance](https://supabase.com/docs/guides/database/connecting-to-postgres).
 
 Deployment preparation: required production runtime variables are stored in Vercel; private credentials use its secret type. Database connection/password variables remain local to migrations. `COMMERCE_ENABLED=false` is retained. The app name is defined in `src/config/brand.js`; email sender display names and PDF filenames use it too.
+
+
+## Profesional subscription operations
+
+The separate SUBSCRIPTIONS_ENABLED flag defaults to false and also requires COMMERCE_ENABLED=true. Do not enable either production gate during mocked tests. Profesional requires a verified account and explicit recurring-payment consent: 29,990 CLP including IVA, 30 prepared reports per paid monthly period, one user, no rollover or automatic overages. Live publication tracking and valuations remain demonstrations and are disclosed separately on checkout.
+
+Card Payment Brick tokenizes the card; the server creates a preapproval with a fixed monthly CLP amount. It persists a local reference before calling the provider, enforces one non-cancelled subscription per account, and never blindly retries an uncertain creation. No raw card data or card token is stored. If a creation remains uncertain, reconciliation searches the provider using the local reference and payer email, validates the exact match and requires manual review for absent/ambiguous or truncated results. Do not delete uncertain rows just to let a buyer try again.
+
+Authorizing a subscription grants no credits. Each provider invoice is linked to its preapproval and fetched payment; merchant, reference, amount and currency are checked. Only an approved payment grants that invoice's 30 credits. Cycle expiry is the invoice debit date plus one calendar month in UTC (month-end clamped). Late approvals do not extend an old cycle; future cycles cannot be redeemed early. Invoice and cycle uniqueness plus row locks prevent duplicate grants. Rejected-payment retries can replace an unsettled payment, while settled or refunded cycles cannot be silently replaced. Partial refunds and chargebacks revoke that cycle's downloads and remaining credits.
+
+Mi cuenta shows monthly authorizations separately from paid purchases. Cancellation persists an intent before contacting Mercado Pago; failures remain visible and are retried. Confirmed cancellation does not shorten paid-order expiry or remove purchase history. A renewal already in progress at cancellation requires provider reconciliation; cancellation is not an automatic refund.
+
+The carbase-subscription-recovery scheduler runs every five minutes, offset two minutes from report delivery, and calls action=subscriptionJobs. It checks one subscription and one paginated invoice per run with a persistent cursor. Cancelled subscriptions remain in reconciliation for late refunds. This intentionally small worker is for pilot traffic: full reconciliation latency grows with subscriptions and invoice history. Inspect both cron execution and HTTP response failed counts; scale to a queue and add alerts before higher volume. Run commerce:scheduler after the deployed handler supports the action. Its check, pause and probe modes cover both jobs.
+
+The migration runner verifies checksums and applies all ordered migration files, including 202609080001_subscriptions.sql. The original one-time migration remains immutable.
+
+### Provider test boundary
+
+Store actual secrets only in ignored .env.test.local. The committed .env.example must contain placeholders. The explicit test credential checker reads ONLY .env.test.local, never production fallbacks: node scripts/check-mercadopago-test.js. A TEST-prefixed business-app token is different from a separate test-seller application; subscription validation still needs test-seller app credentials and a test buyer. No production subscription should be created to work around missing test setup.
+
+Reference: Mercado Pago Subscriptions API (preapproval, authorized_payments and v1/payments), and its Card Payment Brick integration. Automated tests use simulated provider and SMTP responses plus the actual SQL on PGlite; they are not evidence that Mercado Pago has accepted the integration.

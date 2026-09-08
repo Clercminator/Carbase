@@ -1,10 +1,10 @@
 # Pricing and payments proposal
 
-Working proposal · 2026-09-07. Not approved production pricing. `/pricing` exposes the proposal and demonstration links; a first one-time commerce implementation is now present but gated pending deployment, database setup, SMTP authentication and real prepared reports. See [commerce operations](commerce-operations.md).
+Working proposal · 2026-09-07. Not approved production pricing. `/pricing` exposes the proposal and demonstration links; a first one-time commerce implementation is now present but gated pending provider acceptance testing and real prepared reports. See [commerce operations](commerce-operations.md).
 
 ## Launch catalog
 
-All amounts are CLP including IVA. `src/data/pricingPlans.js` is the frontend catalog; a future server must own its own versioned, authoritative prices.
+All amounts are CLP including IVA. `src/data/pricingPlans.js` is the frontend catalog; the server owns authoritative one-time prices and the Profesional subscription amount.
 
 | Plan | Gross price | Allowance | Term |
 | --- | ---: | --- | --- |
@@ -59,6 +59,6 @@ Start with Mercado Pago, since the business account already exists.
 
 The first implementation uses Payment Brick with card payments (credit/debit, one installment), server-authoritative prices, verified payment notifications, private purchases, atomic pack credits, verified-email guest claiming, PDF downloads and Google Workspace SMTP delivery. Guest checkout starts from an already prepared real report; a pack delivers that report plus two additional credits. Account creation is optional for these purchases.
 
-Monthly plans remain proposed; Card Payment Brick plus the Subscriptions API is future work. Wallet payments are not enabled in the first card-only release. Production credentials were verified with a read-only Chile-account check; no charge was created. Rotation of the webhook secret exposed in the screenshot has not been confirmed.
+Profesional now has a gated Card Payment Brick and Subscriptions API implementation. Automotora remains proposed. Wallet payments are not enabled in the first card-only release. Production credentials were verified with a read-only Chile-account check; no charge was created. Rotation of the webhook secret exposed in the screenshot has not been confirmed.
 
 See [commerce operations](commerce-operations.md) for implemented routes, environment configuration, deployment blockers and remaining validation. The remote commerce migration and private report bucket are installed; SMTP authentication is verified. No paid product should be launched until real data and delivery, measured costs, provider tests and commercial terms have been validated.

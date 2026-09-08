@@ -15,6 +15,7 @@ import { RequireAuth } from './components/AuthProvider.jsx'
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage.jsx'))
 const PurchasePage = lazy(() => import('./pages/PurchasePage.jsx'))
 const AccountPage = lazy(() => import('./pages/AccountPage.jsx'))
+const SubscriptionPage = lazy(() => import('./pages/SubscriptionPage.jsx'))
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/purchase/:id" element={<PurchasePage />} />
         <Route path="/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
+        <Route path="/subscribe/pro" element={<RequireAuth><SubscriptionPage /></RequireAuth>} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
