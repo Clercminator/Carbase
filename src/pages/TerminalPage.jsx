@@ -1,3 +1,4 @@
+import { APP_NAME } from '../config/brand.js'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle, Bell, BookOpen, Boxes, CalendarDays, ChevronRight, CircleHelp, FileSearch,
@@ -6,6 +7,8 @@ import {
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { TerminalContent } from '../components/terminal/TerminalViews.jsx'
 import { useDemoTerminalStore } from '../lib/demoTerminalStore.js'
+import { useAuth } from '../lib/authContext.js'
+import { supabase } from '../lib/supabase.js'
 import PageMeta from '../components/PageMeta.jsx'
 
 const navigation = [
@@ -34,6 +37,7 @@ const activity = [
 ]
 
 export default function TerminalPage() {
+  const { session } = useAuth()
   const { view = 'resumen' } = useParams()
   const activeView = navigation.some((item) => item.id === view) ? view : 'resumen'
   const [query, setQuery] = useState('')
@@ -41,7 +45,7 @@ export default function TerminalPage() {
   const [toast, setToast] = useState('')
   const searchRef = useRef(null)
   const toastTimerRef = useRef(null)
-  const { state: store, update: updateStore } = useDemoTerminalStore()
+  const { state: store, update: updateStore } = useDemoTerminalStore(session.user.id)
   const navigate = useNavigate()
   const filteredActivity = useMemo(() => activity.filter((row) => row.join(' ').toLowerCase().includes(query.toLowerCase())), [query])
 
@@ -64,9 +68,9 @@ export default function TerminalPage() {
 
   return (
     <div className="terminal-page">
-      <PageMeta title={`${navigation.find((item) => item.id === activeView)?.label || 'Terminal'} — AUTOINDEX`} description="Espacio profesional demostrativo para tasaciones, inventario, mercado, seguimientos y alertas." />
+      <PageMeta title={`${navigation.find((item) => item.id === activeView)?.label || 'Terminal'} — ${APP_NAME}`} description="Espacio profesional demostrativo para tasaciones, inventario, mercado, seguimientos y alertas." />
       <aside className={`terminal-sidebar${mobileOpen ? ' is-open' : ''}`}>
-        <div className="terminal-brand"><Link to="/">AUTOINDEX</Link><button type="button" onClick={() => setMobileOpen(false)} aria-label="Cerrar navegación"><X /></button></div>
+        <div className="terminal-brand"><Link to="/">{APP_NAME}</Link><button type="button" onClick={() => setMobileOpen(false)} aria-label="Cerrar navegación"><X /></button></div>
         <button className="terminal-org" type="button"><span>D</span><div><strong>Distribuidora demo</strong><small>Espacio profesional</small></div></button>
         <nav aria-label="Terminal profesional">
           {navigation.map(({ id, label, Icon }) => (
@@ -75,7 +79,7 @@ export default function TerminalPage() {
             </button>
           ))}
         </nav>
-        <div className="terminal-user"><span>U</span><div><strong>Usuario demo</strong><small>Modo demostración</small></div><LogOut aria-hidden="true" /></div>
+        <div className="terminal-user"><span>U</span><div><strong title={session.user.email}>{session.user.email}</strong><small>Modo demostración</small></div><button type="button" aria-label="Cerrar sesión" onClick={async () => { try { const { error } = await supabase.auth.signOut({ scope: 'local' }); if (error) notify('No pudimos cerrar la sesión. Inténtalo nuevamente.') } catch { notify('No pudimos cerrar la sesión. Inténtalo nuevamente.') } }}><LogOut aria-hidden="true" /></button></div>
       </aside>
 
       <div className="terminal-workspace">
@@ -125,7 +129,7 @@ function TerminalRail() {
     <aside className="terminal-rail">
       <section><h2>Cobertura de datos</h2><dl><div><dt>Última actualización</dt><dd>Hace 6 horas</dd></div><div><dt>Observaciones comparables</dt><dd>24 demostrativas</dd></div><div><dt>Regiones con cobertura</dt><dd>Por confirmar</dd></div></dl><Link to="/methodology">Ver metodología <ChevronRight /></Link></section>
       <section><h2>Liquidez de mercado <small>30 días</small></h2><div className="liquidity-chart" aria-label="Gráfico demostrativo de liquidez"><svg viewBox="0 0 300 130"><path d="M8 91 C35 38 58 62 80 72 S122 108 148 68 S184 44 205 72 S247 96 292 48" /><line x1="8" y1="69" x2="292" y2="69" /></svg></div><div className="liquidity-labels"><span>Baja</span><span>Normal</span><span>Alta</span></div></section>
-      <section><h2>Calidad del conjunto</h2><p>Los valores son ilustrativos hasta conectar fuentes licenciadas y resultados reales.</p><Link to="/methodology">Fuentes y licencias <ChevronRight /></Link></section>
+      <section><h2>Calidad del conjunto</h2><p>Los valores son ilustrativos hasta conectar fuentes licenciadas y resultados reales.</p><Link to="/methodology">Nuestro enfoque <ChevronRight /></Link></section>
     </aside>
   )
 }

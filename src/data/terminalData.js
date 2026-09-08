@@ -36,12 +36,6 @@ export const alertSeed = [
   { id: 'ale-004', name: 'Nueva oportunidad con liquidez alta', scope: 'Segmentos guardados', channel: 'Correo', lastTriggered: 'Nunca', enabled: false },
 ]
 
-export const sourceRows = [
-  { source: 'Fuente demostrativa A', type: 'Publicaciones', license: 'Por confirmar', freshness: 'Hace 6 h', observations: '18.420', coverage: 'Zona central', state: 'Demostración' },
-  { source: 'Fuente demostrativa B', type: 'Distribuidores', license: 'Relación directa', freshness: 'Ayer', observations: '5.180', coverage: 'Cobertura parcial', state: 'Demostración' },
-  { source: 'Fuente pública', type: 'Contexto macro', license: 'Uso documentado', freshness: 'Mensual', observations: 'Agregadas', coverage: 'Nacional', state: 'Referencia' },
-]
-
 export function formatClp(value) {
   return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(value)
 }

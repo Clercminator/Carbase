@@ -9,7 +9,7 @@ export default function HeroCarField() {
   return (
     <div className="hero-car-field" aria-hidden="true">
       {cars.map(([left, top, size, rotation, opacity], index) => (
-        <span key={`${left}-${top}`} style={{ left: `${left}%`, top: `${top}%`, fontSize: `${size}px`, opacity, '--rotation': `${rotation}deg`, '--delay': `${index * -0.37}s` }}>🚗</span>
+        <span key={`${left}-${top}`} style={{ left: `${left}%`, top: `${top}%`, fontSize: `${size}px`, opacity, '--rotation': `${rotation}deg`, '--delay': `${index * -3.7}s`, '--duration': `${28 + (index % 5) * 4}s`, '--travel': `${index % 2 ? -60 : 60}px` }}>🚗</span>
       ))}
     </div>
   )

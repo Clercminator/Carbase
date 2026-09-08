@@ -1,3 +1,4 @@
+import { APP_NAME } from '../config/brand.js'
 import SiteHeader from '../components/SiteHeader.jsx'
 import VideoPlaceholder from '../components/VideoPlaceholder.jsx'
 import SearchExperience from '../components/SearchExperience.jsx'
@@ -7,7 +8,7 @@ import PageMeta from '../components/PageMeta.jsx'
 export default function LandingPage() {
   return (
     <>
-      <PageMeta title="AUTOINDEX — Inteligencia de mercado automotriz" />
+      <PageMeta title={APP_NAME + " — Inteligencia de mercado automotriz"} />
       <SiteHeader />
       <main>
         <section className="hero" id="home">

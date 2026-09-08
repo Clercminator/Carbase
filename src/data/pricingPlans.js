@@ -1,0 +1,10 @@
+// Proposed launch catalog. Paid fulfillment and billing are not enabled.
+export const pricingPlans = [
+  { id: 'preview', audience: 'personal', name: 'Explora', priceClp: 0, period: 'sin tarjeta', description: 'Conoce cómo evaluamos una oportunidad.', features: ['Vista previa del análisis', 'Rango de precio y nivel de confianza', 'Metodología y limitaciones visibles'], href: '/deal-check', cta: 'Probar la demo' },
+  { id: 'report', audience: 'personal', name: 'Informe individual', priceClp: 4990, period: 'pago único', description: 'Para evaluar el auto que tienes en mente.', features: ['1 análisis completo', 'Comparables y ajustes explicados', 'Referencia para negociar', 'Informe descargable previsto'], href: '/analysis/demo-evaluacion', cta: 'Ver informe de ejemplo' },
+  { id: 'pack', audience: 'personal', name: 'Compara 3', priceClp: 11990, period: 'pago único', description: 'Para decidir entre varias alternativas.', badge: 'Para tu próxima compra', features: ['3 análisis completos', 'Todo lo del informe individual', 'Créditos válidos por 90 días', 'Ahorras $2.980 frente a 3 informes'], href: '/analysis/demo-evaluacion', cta: 'Explorar un informe' },
+  { id: 'pro', audience: 'business', name: 'Profesional', priceClp: 29990, period: 'al mes', description: 'Para tasadores y compradores independientes.', features: ['30 análisis completos por mes', '1 usuario', 'Hasta 20 publicaciones en seguimiento', 'Terminal de mercado y exportación CSV'], href: '/terminal/mercado', cta: 'Explorar terminal demo' },
+  { id: 'business', audience: 'business', name: 'Automotora', priceClp: 79990, period: 'al mes', description: 'Para equipos que compran y venden a diario.', badge: 'Para equipos', features: ['150 análisis completos por mes', '3 usuarios en una organización', 'Hasta 100 vehículos en inventario', 'Hasta 100 publicaciones en seguimiento', 'Alertas de precio y exportación CSV'], href: '/terminal/inventario', cta: 'Explorar inventario demo' },
+]
+
+export const formatPlanPrice = (amount) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount)

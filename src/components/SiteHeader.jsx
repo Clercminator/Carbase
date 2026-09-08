@@ -1,68 +1,38 @@
-import { useEffect, useId, useRef, useState } from 'react'
-import { Globe2, Menu, Search, UserRound, X } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
-import { saveDemoAnalysis } from '../lib/demoAnalysis.js'
+import { APP_NAME } from '../config/brand.js'
+import { useId, useState } from 'react'
+import { Globe2, Menu, UserRound, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../lib/authContext.js'
 
 const navItems = [
-  { label: 'Análisis gratuito', href: '/deal-check' },
   { label: 'Mercado', href: '/terminal/mercado' },
-  { label: 'Datos', href: '/methodology' },
-  { label: 'Distribuidores', href: '/terminal' },
+  { label: 'Distribuidores', href: '/terminal/inventario' },
   { label: 'Metodología', href: '/methodology' },
+  { label: 'Planes', href: '/pricing' },
 ]
 
 export default function SiteHeader({ theme = 'dark', ctaLabel = 'Analizar gratis', ctaHref = '/deal-check' }) {
-  const [query, setQuery] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
-  const navigate = useNavigate()
-  const searchRef = useRef(null)
   const menuId = useId()
-
-  useEffect(() => {
-    const handleShortcut = (event) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault()
-        searchRef.current?.focus()
-      }
-    }
-    document.addEventListener('keydown', handleShortcut)
-    return () => document.removeEventListener('keydown', handleShortcut)
-  }, [])
-
-  const submitSearch = (event) => {
-    event.preventDefault()
-    const value = query.trim()
-    if (!value) { searchRef.current?.focus(); return }
-    const analysis = saveDemoAnalysis({ method: 'search', description: value })
-    navigate(`/analysis/${analysis.analysisId}`, { state: { vehicle: value, processing: true } })
-    setMenuOpen(false)
-  }
+  const { session } = useAuth()
 
   return (
     <header className={`site-header site-header--${theme}`}>
       <div className="header-inner">
         <div className="header-start">
-          <Link className="wordmark" to="/" aria-label="AUTOINDEX, inicio">AUTOINDEX</Link>
-          <form className="global-search" onSubmit={submitSearch} role="search">
-            <Search aria-hidden="true" />
-            <input
-              ref={searchRef}
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              aria-label="Buscar en AUTOINDEX"
-              placeholder="Buscar (Ctrl+K)"
-            />
-          </form>
+          <Link className="wordmark" to="/" aria-label={APP_NAME + ", inicio"}>{APP_NAME}</Link>
+
         </div>
 
         <nav className="desktop-nav" aria-label="Navegación principal">
+          <Link className="gradient-button" to={ctaHref}>{ctaLabel}</Link>
           {navItems.map((item) => <Link key={item.label} to={item.href}>{item.label}</Link>)}
         </nav>
 
         <div className="header-actions">
           <button className="language-button" type="button" aria-label="Idioma: español"><Globe2 /><span>ES</span></button>
-          <Link className="account-button" to="/terminal" aria-label="Abrir terminal profesional"><UserRound /></Link>
-          <Link className="gradient-button" to={ctaHref}>{ctaLabel}</Link>
+          <Link className="account-button" to={session ? "/account" : "/auth"} aria-label={session ? 'Mi cuenta' : 'Iniciar sesión'}><UserRound /></Link>
+          <Link className="gradient-button mobile-cta" to={ctaHref}>{ctaLabel}</Link>
           <button
             className="menu-button"
             type="button"

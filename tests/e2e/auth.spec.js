@@ -1,0 +1,66 @@
+import { expect, test } from '@playwright/test'
+import AxeBuilder from '@axe-core/playwright'
+import { mockAuth } from './auth-fixture.js'
+
+test.beforeEach(async ({ page }) => { await mockAuth(page) })
+
+test('protected destination survives login, reload and logout', async ({ page, isMobile }) => {
+  await page.goto('/terminal/inventario')
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible()
+  await page.getByLabel('Correo electrónico').fill('test@example.test')
+  await page.getByLabel('Contraseña', { exact: true }).fill('wrong-password')
+  await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click()
+  await expect(page.getByRole('alert')).toHaveText('Correo o contraseña incorrectos.')
+  await page.getByLabel('Contraseña', { exact: true }).fill('correct-password')
+  await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click()
+  await expect(page).toHaveURL(/\/terminal\/inventario$/)
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Inventario', exact: true })).toBeVisible()
+  if (isMobile) await page.getByRole('button', { name: 'Abrir navegación' }).click()
+  await page.getByRole('button', { name: 'Cerrar sesión' }).click()
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible()
+  await page.goto('/terminal/inventario')
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible()
+})
+
+test('registration and recovery requests explain the email step', async ({ page }) => {
+  await page.goto('/auth')
+  await page.getByRole('button', { name: 'Crear cuenta' }).click()
+  await page.getByLabel('Correo electrónico').fill('test@example.test')
+  await page.getByLabel('Contraseña', { exact: true }).fill('new-password')
+  await page.getByRole('button', { name: 'Crear cuenta', exact: true }).click()
+  await expect(page.getByRole('status')).toContainText('Revisa tu correo')
+  await page.getByRole('button', { name: 'Olvidé mi contraseña' }).click()
+  await page.getByRole('button', { name: 'Enviar enlace' }).click()
+  await expect(page.getByRole('status')).toContainText('recibirás un enlace')
+  await page.goto('/auth?mode=recovery')
+  await expect(page.getByRole('button', { name: 'Nueva contraseña' })).toBeDisabled()
+  await page.getByRole('link', { name: 'Volver al inicio de sesión' }).click()
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible()
+})
+
+test('a recovery session can update its password', async ({ page }) => {
+  await mockAuth(page, { signedIn: true })
+  await page.goto('/auth?mode=recovery')
+  await page.getByLabel('Nueva contraseña', { exact: true }).fill('changed-password')
+  const request = page.waitForRequest((r) => r.url().endsWith('/auth/v1/user') && r.method() === 'PUT')
+  await page.getByRole('button', { name: 'Nueva contraseña' }).click()
+  expect((await request).postDataJSON()).toMatchObject({ password: 'changed-password' })
+  await expect(page.getByRole('status')).toContainText('Contraseña actualizada')
+  await page.getByRole('link', { name: 'Abrir terminal' }).click()
+  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible()
+})
+
+test('navigation is consolidated and auth is accessible', async ({ page, isMobile }) => {
+  await page.goto('/')
+  await expect(page.getByRole('search')).toHaveCount(0)
+  await expect(page.locator('header').getByRole('link', { name: 'Analizar gratis' }).filter({ visible: true })).toHaveCount(1)
+  if (isMobile) await page.getByRole('button', { name: 'Abrir menú' }).click()
+  const nav = page.getByRole('navigation', { name: isMobile ? 'Navegación móvil' : 'Navegación principal' })
+  await expect(nav.getByRole('link', { name: 'Datos', exact: true })).toHaveCount(0)
+  await expect(nav.getByRole('link', { name: 'Mercado', exact: true })).toHaveAttribute('href', '/terminal/mercado')
+  await nav.getByRole('link', { name: 'Distribuidores' }).click()
+  await expect(page).toHaveURL(/next=%2Fterminal%2Finventario/)
+  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
+  expect(results.violations.filter((v) => ['serious', 'critical'].includes(v.impact))).toEqual([])
+})

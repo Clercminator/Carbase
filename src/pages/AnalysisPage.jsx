@@ -1,3 +1,4 @@
+import { APP_NAME } from '../config/brand.js'
 import { AlertTriangle, Check, ChevronDown, ChevronLeft, ChevronRight, Clock3, Copy, Info, RefreshCcw, Search, ShieldCheck } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom'
@@ -29,7 +30,7 @@ export default function AnalysisPage() {
   const share = async () => {
     const url = `${window.location.origin}/analysis/${analysisId}?scenario=${scenario.id}`
     try {
-      if (navigator.share) await navigator.share({ title: 'Análisis AUTOINDEX', url })
+      if (navigator.share) await navigator.share({ title: "Análisis " + APP_NAME, url })
       else await navigator.clipboard.writeText(url)
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1800)
@@ -40,7 +41,7 @@ export default function AnalysisPage() {
 
   return (
     <div className="analysis-page">
-      <PageMeta title={`${processing ? 'Preparando análisis' : scenario.title || 'Resultado del análisis'} — AUTOINDEX`} />
+      <PageMeta title={`${processing ? 'Preparando análisis' : scenario.title || 'Resultado del análisis'} — ${APP_NAME}`} />
       <SiteHeader theme="light" />
       <main className="analysis-main content-container">
         {processing ? <AnalysisState icon={Clock3} label="Análisis en curso" title="Estamos preparando una recomendación explicable" copy="Identificamos el vehículo, revisamos la cobertura y seleccionamos comparables antes de mostrar una estimación." processing /> : null}
@@ -95,7 +96,7 @@ function AnalysisDisclosures() {
   return (
     <footer className="analysis-disclosures">
       {[
-        ['Metodología', 'Criterios y ajustes visibles', '/methodology'], ['Limitaciones', 'No reemplaza una inspección', '/methodology'], ['Fuentes y licencias', 'Procedencia por confirmar', '/methodology'], ['Tratamiento de datos', 'Privacidad y retención', '/privacy'], ['Relaciones comerciales', 'Independencia declarada', '/terms'],
+        ['Metodología', 'Nuestro enfoque de análisis', '/methodology'], ['Limitaciones', 'No reemplaza una inspección', '/methodology'], ['Calidad de la información', 'Alcance de la demostración', '/methodology'], ['Tratamiento de datos', 'Privacidad y retención', '/privacy'], ['Relaciones comerciales', 'Independencia declarada', '/terms'],
       ].map(([title, copy, to]) => <Link to={to} key={title}><strong>{title}</strong><small>{copy}</small></Link>)}
       <Link className="new-search-footer" to="/deal-check"><Search /> Nueva búsqueda</Link>
     </footer>

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { mockAuth } from './auth-fixture.js'
 
 test('publication analysis reaches an explainable result and its next actions', async ({ page }) => {
   await page.goto('/deal-check')
@@ -34,6 +35,7 @@ test('insufficient data returns a recovery path instead of a fabricated price', 
 })
 
 test('terminal rows and modal controls remain keyboard accessible', async ({ page }) => {
+  await mockAuth(page, { signedIn: true })
   await page.goto('/terminal/inventario')
   const rowButton = page.getByRole('button', { name: 'Abrir Vehículo A' })
   await rowButton.focus()
@@ -64,8 +66,9 @@ test('inspection request makes its demo behavior and consent explicit', async ({
   await expect(page.getByRole('status')).toContainText('No enviamos ni almacenamos información')
 })
 
-test('primary public pages have no serious or critical automated accessibility violations', async ({ page }) => {
-  for (const route of ['/deal-check', '/analysis/demo?scenario=high', '/privacy']) {
+test('public and data pages have no serious or critical automated accessibility violations', async ({ page }) => {
+  await mockAuth(page, { signedIn: true })
+  for (const route of ['/deal-check', '/analysis/demo?scenario=high', '/methodology', '/terminal/datos', '/privacy']) {
     await page.goto(route)
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
     const material = results.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact))
@@ -74,7 +77,8 @@ test('primary public pages have no serious or critical automated accessibility v
 })
 
 test('core pages do not create horizontal body overflow', async ({ page }) => {
-  for (const route of ['/', '/deal-check', '/analysis/demo?scenario=low', '/terminal/mercado', '/privacy']) {
+  await mockAuth(page, { signedIn: true })
+  for (const route of ['/', '/deal-check', '/analysis/demo?scenario=low', '/terminal/mercado', '/methodology', '/terminal/datos', '/privacy']) {
     await page.goto(route)
     const dimensions = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }))
     expect(dimensions.scrollWidth).toBe(dimensions.clientWidth)
@@ -82,15 +86,18 @@ test('core pages do not create horizontal body overflow', async ({ page }) => {
 })
 
 test('core routes set meaningful titles and emit no runtime errors', async ({ page }) => {
+  await mockAuth(page, { signedIn: true })
   const errors = []
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()) })
   page.on('pageerror', (error) => errors.push(error.message))
   const routes = [
-    ['/', 'AUTOINDEX'],
+    ['/', 'Carbase'],
     ['/deal-check', 'Análisis gratuito'],
     ['/analysis/demo?scenario=high', 'Resultado del análisis'],
     ['/terminal', 'Resumen'],
     ['/privacy', 'Privacidad'],
+    ['/methodology', 'Metodología'],
+    ['/terminal/datos', 'Datos y metodología'],
   ]
   for (const [route, title] of routes) {
     await page.goto(route)

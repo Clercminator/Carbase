@@ -1,3 +1,4 @@
+import { APP_NAME } from '../../config/brand.js'
 import { useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle, Bell, CalendarDays, Check, ChevronDown, ChevronRight,
@@ -5,7 +6,7 @@ import {
   Pause, Play, Plus, RefreshCcw, Save, ShieldCheck, TrendingDown, TrendingUp, Upload, X,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { appraisalRows, formatClp, marketSegments, sourceRows } from '../../data/terminalData.js'
+import { appraisalRows, formatClp, marketSegments } from '../../data/terminalData.js'
 import MarketChart from './MarketChart.jsx'
 import TerminalModal from './TerminalModal.jsx'
 
@@ -183,7 +184,23 @@ function AlertsView({ query, store, updateStore, notify }) {
 }
 
 function DataView() {
-  return <main className="terminal-view"><ViewHeading title="Datos y metodología" copy="Revisa procedencia, cobertura, calidad y limitaciones del conjunto."><Link className="view-link-button" to="/methodology"><ShieldCheck /> Ver metodología completa</Link></ViewHeading><section className="data-quality-overview"><div><h2>Preparación del conjunto</h2><p>La infraestructura está diseñada para conservar trazabilidad y permisos desde la observación original hasta cada resultado.</p><span className="quality-progress"><i style={{ width: '68%' }} /></span><small>Estado demostrativo · 68%</small></div><dl><div><dt>Fuentes registradas</dt><dd>3</dd></div><div><dt>Licencias confirmadas</dt><dd>1 de 3</dd></div><div><dt>Última actualización</dt><dd>Hace 6 h</dd></div><div><dt>Cobertura validada</dt><dd>Pendiente</dd></div></dl></section><section className="terminal-data-panel"><div className="panel-title-line"><h2>Registro de fuentes</h2><DemoLabel /></div><div className="terminal-data-table"><table><thead><tr><th>Fuente</th><th>Tipo</th><th>Base de uso</th><th>Actualización</th><th>Observaciones</th><th>Cobertura</th><th>Estado</th></tr></thead><tbody>{sourceRows.map((row) => <tr key={row.source}><td><strong>{row.source}</strong></td><td>{row.type}</td><td>{row.license}</td><td>{row.freshness}</td><td>{row.observations}</td><td>{row.coverage}</td><td><Status value={row.state} /></td></tr>)}</tbody></table></div></section><section className="governance-checks"><article><ShieldCheck /><div><strong>Procedencia y licencia</strong><p>Cada dato conserva fuente, permiso, fecha y política de retención.</p></div></article><article><ListChecks /><div><strong>Reproducibilidad</strong><p>Entradas, metodología y resultados deben quedar versionados.</p></div></article><article><Globe2 /><div><strong>Cobertura explícita</strong><p>Los resultados mostrarán zonas con datos suficientes y limitaciones.</p></div></article></section></main>
+  return (
+    <main className="terminal-view">
+      <ViewHeading title="Datos y metodología" copy="Información clara para usar cada análisis con criterio.">
+        <Link className="view-link-button" to="/methodology"><ShieldCheck /> Conocer el enfoque</Link>
+        <Link className="view-link-button" to="/privacy">Privacidad</Link>
+      </ViewHeading>
+      <section className="data-quality-overview">
+        <div><h2>Una referencia con contexto</h2><p>{APP_NAME} está diseñado para revisar la información y comparar vehículos similares antes de presentar una referencia de mercado.</p><DemoLabel /></div>
+        <div><h2>Qué significa esta demo</h2><p>Las cifras son ejemplos para explorar el producto. Todavía no representan datos de mercado en vivo ni una tasación comercial.</p></div>
+      </section>
+      <section className="governance-checks">
+        <article><ListChecks aria-hidden="true" /><div><strong>Calidad antes que cantidad</strong><p>Cuando la información no alcanza, el análisis lo indica sin presentar un precio.</p></div></article>
+        <article><Globe2 aria-hidden="true" /><div><strong>Límites a la vista</strong><p>La confianza y el contexto ayudan a interpretar el resultado. Una estimación no reemplaza una inspección.</p></div></article>
+        <article><ShieldCheck aria-hidden="true" /><div><strong>Tus registros</strong><p>En esta demo, los registros del terminal se guardan en tu navegador, separados por cuenta. No se envían a otros distribuidores.</p></div></article>
+      </section>
+    </main>
+  )
 }
 
 function InlineSelect({ label }) {

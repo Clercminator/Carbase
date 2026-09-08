@@ -1,5 +1,5 @@
 {
-  "name": "carbase-autoindex",
+  "name": "carbase",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -10,16 +10,22 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "verify": "npm run lint && npm run test && npm run build"
+    "verify": "npm run lint && npm run test && npm run build",
+    "commerce:setup": "node scripts/setup-commerce.js",
+    "commerce:check": "node scripts/check-commerce.js"
   },
   "dependencies": {
+    "@mercadopago/sdk-react": "^1.0.7",
+    "@supabase/supabase-js": "^2.115.0",
     "lucide-react": "^0.468.0",
+    "nodemailer": "^10.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.1"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
+    "@electric-sql/pglite": "^0.5.8",
     "@eslint/js": "^9.17.0",
     "@playwright/test": "^1.63.0",
     "@types/react": "^19.0.3",
@@ -30,6 +36,7 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
+    "pg": "^8.23.0",
     "vite": "^6.0.5",
     "vitest": "^5.0.0"
   }
