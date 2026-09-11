@@ -50,7 +50,7 @@ export default function PricingPage() {
           <div><CreditCard aria-hidden="true" /><h2>Pesos chilenos. Cuentas claras.</h2><p>Precios finales con IVA incluido. Mercado Pago será el primer medio de pago previsto para el lanzamiento.</p></div>
         </section>
         <section className="pricing-faq"><div><span className="pricing-eyebrow">ANTES DE ELEGIR</span><h2>Preguntas frecuentes</h2><p>Lo que necesitas saber sobre los planes propuestos.</p><Link to="/methodology">Conoce nuestra metodología <ArrowRight aria-hidden="true" size={16} /></Link></div><div>{questions.map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div></section>
-        <nav className="pricing-legal" aria-label="Información legal"><Link to="/privacy">Privacidad</Link><Link to="/terms">Condiciones de la demostración</Link></nav>
+        <nav className="pricing-legal" aria-label="Información legal"><Link to="/privacy">Privacidad</Link><Link to="/terms">Términos y condiciones</Link><Link to="/data-compliance">Datos y cumplimiento</Link><Link to="/intellectual-property">Marca y propiedad intelectual</Link></nav>
       </main>
     </div>
   )

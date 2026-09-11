@@ -51,7 +51,11 @@ test('terminal rows and modal controls remain keyboard accessible', async ({ pag
 
 test('privacy and unknown routes have explicit destinations', async ({ page }) => {
   await page.goto('/privacy#patentes')
-  await expect(page.getByRole('heading', { name: 'Privacidad y tratamiento de datos' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Política de privacidad' })).toBeVisible()
+  await page.goto('/data-compliance')
+  await expect(page.getByRole('heading', { name: 'Datos y cumplimiento' })).toBeVisible()
+  await page.goto('/intellectual-property')
+  await expect(page.getByRole('heading', { name: 'Marca y propiedad intelectual' })).toBeVisible()
   await page.goto('/ruta-que-no-existe')
   await expect(page.getByRole('heading', { name: 'No encontramos esta página' })).toBeVisible()
 })
@@ -68,7 +72,7 @@ test('inspection request makes its demo behavior and consent explicit', async ({
 
 test('public and data pages have no serious or critical automated accessibility violations', async ({ page }) => {
   await mockAuth(page, { signedIn: true })
-  for (const route of ['/deal-check', '/analysis/demo?scenario=high', '/methodology', '/terminal/datos', '/privacy']) {
+  for (const route of ['/deal-check', '/analysis/demo?scenario=high', '/methodology', '/terminal/datos', '/privacy', '/terms', '/data-compliance', '/intellectual-property']) {
     await page.goto(route)
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
     const material = results.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact))
@@ -78,7 +82,7 @@ test('public and data pages have no serious or critical automated accessibility 
 
 test('core pages do not create horizontal body overflow', async ({ page }) => {
   await mockAuth(page, { signedIn: true })
-  for (const route of ['/', '/deal-check', '/analysis/demo?scenario=low', '/terminal/mercado', '/methodology', '/terminal/datos', '/privacy']) {
+  for (const route of ['/', '/deal-check', '/analysis/demo?scenario=low', '/terminal/mercado', '/methodology', '/terminal/datos', '/privacy', '/terms', '/data-compliance', '/intellectual-property']) {
     await page.goto(route)
     const dimensions = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }))
     expect(dimensions.scrollWidth).toBe(dimensions.clientWidth)
@@ -95,7 +99,10 @@ test('core routes set meaningful titles and emit no runtime errors', async ({ pa
     ['/deal-check', 'Análisis gratuito'],
     ['/analysis/demo?scenario=high', 'Resultado del análisis'],
     ['/terminal', 'Resumen'],
-    ['/privacy', 'Privacidad'],
+    ['/privacy', 'Política de privacidad'],
+    ['/terms', 'Términos'],
+    ['/data-compliance', 'Datos y cumplimiento'],
+    ['/intellectual-property', 'Marca y propiedad intelectual'],
     ['/methodology', 'Metodología'],
     ['/terminal/datos', 'Datos y metodología'],
   ]

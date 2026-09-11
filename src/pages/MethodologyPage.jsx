@@ -26,7 +26,7 @@ export default function MethodologyPage() {
             <article key={title}><Icon aria-hidden="true" /><div><h2>{title}</h2><p>{copy}</p></div></article>
           ))}
         </section>
-        <nav className="methodology-legal-links" aria-label="Información legal"><Link to="/privacy">Privacidad y tratamiento de datos</Link><Link to="/terms">Condiciones de la demostración</Link></nav>
+        <nav className="methodology-legal-links" aria-label="Información legal"><Link to="/privacy">Privacidad</Link><Link to="/terms">Términos y condiciones</Link><Link to="/data-compliance">Datos y cumplimiento</Link><Link to="/intellectual-property">Marca y propiedad intelectual</Link></nav>
       </main>
     </div>
   )

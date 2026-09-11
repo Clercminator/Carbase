@@ -6,6 +6,8 @@ import LandingPage from './pages/LandingPage.jsx'
 import MethodologyPage from './pages/MethodologyPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import PrivacyPage from './pages/PrivacyPage.jsx'
+import DataCompliancePage from './pages/DataCompliancePage.jsx'
+import IntellectualPropertyPage from './pages/IntellectualPropertyPage.jsx'
 import TerminalPage from './pages/TerminalPage.jsx'
 import TermsPage from './pages/TermsPage.jsx'
 import AuthPage from './pages/AuthPage.jsx'
@@ -49,6 +51,8 @@ export default function App() {
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
+        <Route path="/data-compliance" element={<DataCompliancePage />} />
+        <Route path="/intellectual-property" element={<IntellectualPropertyPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes></Suspense>
     </>
